@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Backend Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        h2 { margin-top: 0; }
+        input, button { margin: 5px 0; padding: 5px; width: 100%; }
+        .response { margin-top: 10px; background: #f9f9f9; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Customer Backend Test</h1>
+
+    <!-- REGISTER -->
+    <section>
+        <h2>Register</h2>
+        <input id="reg_username" placeholder="Username">
+        <input id="reg_password" placeholder="Password" type="password">
+        <input id="reg_first_name" placeholder="First Name">
+        <input id="reg_last_name" placeholder="Last Name">
+        <input id="reg_email" placeholder="Email">
+        <input id="reg_phone" placeholder="Phone">
+        <input id="reg_address" placeholder="Shipping Address">
+        <button onclick="register()">Register</button>
+        <div class="response" id="reg_response"></div>
+    </section>
+
+    <!-- LOGIN -->
+    <section>
+        <h2>Login</h2>
+        <input id="login_username" placeholder="Username">
+        <input id="login_password" placeholder="Password" type="password">
+        <button onclick="login()">Login</button>
+        <div class="response" id="login_response"></div>
+    </section>
+
+    <!-- GET PROFILE -->
+    <section>
+        <h2>Get Profile</h2>
+        <button onclick="getProfile()">Get Profile</button>
+        <div class="response" id="profile_response"></div>
+    </section>
+
+    <!-- UPDATE PROFILE -->
+    <section>
+        <h2>Update Profile</h2>
+        <input id="upd_first_name" placeholder="First Name">
+        <input id="upd_last_name" placeholder="Last Name">
+        <input id="upd_email" placeholder="Email">
+        <input id="upd_phone" placeholder="Phone">
+        <input id="upd_address" placeholder="Shipping Address">
+        <button onclick="updateProfile()">Update Profile</button>
+        <div class="response" id="update_response"></div>
+    </section>
+
+    <!-- CHANGE PASSWORD -->
+    <section>
+        <h2>Change Password</h2>
+        <input id="old_password" placeholder="Old Password" type="password">
+        <input id="new_password" placeholder="New Password" type="password">
+        <button onclick="changePassword()">Change Password</button>
+        <div class="response" id="password_response"></div>
+    </section>
+
+    <!-- LOGOUT -->
+    <section>
+        <h2>Logout</h2>
+        <button onclick="logout()">Logout</button>
+        <div class="response" id="logout_response"></div>
+    </section>
+
+    <script>
+        const base = 'customer/'; // folder where PHP files are
+
+        async function register() {
+            const formData = new URLSearchParams();
+            formData.append('username', document.getElementById('reg_username').value);
+            formData.append('password', document.getElementById('reg_password').value);
+            formData.append('first_name', document.getElementById('reg_first_name').value);
+            formData.append('last_name', document.getElementById('reg_last_name').value);
+            formData.append('email', document.getElementById('reg_email').value);
+            formData.append('phone', document.getElementById('reg_phone').value);
+            formData.append('shipping_address', document.getElementById('reg_address').value);
+
+            const res = await fetch(base + 'register.php', {
+                method: 'POST', body: formData
+            });
+            const data = await res.json();
+            document.getElementById('reg_response').innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function login() {
+            const formData = new URLSearchParams();
+            formData.append('username', document.getElementById('login_username').value);
+            formData.append('password', document.getElementById('login_password').value);
+
+            const res = await fetch(base + 'login.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            document.getElementById('login_response').innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function getProfile() {
+            const res = await fetch(base + 'get_profile.php');
+            const data = await res.json();
+            document.getElementById('profile_response').innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function updateProfile() {
+            const formData = new URLSearchParams();
+            formData.append('first_name', document.getElementById('upd_first_name').value);
+            formData.append('last_name', document.getElementById('upd_last_name').value);
+            formData.append('email', document.getElementById('upd_email').value);
+            formData.append('phone', document.getElementById('upd_phone').value);
+            formData.append('shipping_address', document.getElementById('upd_address').value);
+
+            const res = await fetch(base + 'update_profile.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            document.getElementById('update_response').innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function changePassword() {
+            const formData = new URLSearchParams();
+            formData.append('old_password', document.getElementById('old_password').value);
+            formData.append('new_password', document.getElementById('new_password').value);
+
+            const res = await fetch(base + 'change_password.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            document.getElementById('password_response').innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function logout() {
+            const res = await fetch(base + 'logout.php');
+            const data = await res.json();
+            document.getElementById('logout_response').innerText = JSON.stringify(data, null, 2);
+        }
+    </script>
+    <!-- ADD TO CART -->
+<section>
+    <h2>Add to Cart</h2>
+    <input id="cart_isbn" placeholder="Book ISBN">
+    <input id="cart_quantity" placeholder="Quantity" type="number" value="1">
+    <button onclick="addToCart()">Add to Cart</button>
+    <div class="response" id="cart_response"></div>
+</section>
+
+<!-- VIEW CART -->
+<section>
+    <h2>View Cart</h2>
+    <button onclick="viewCart()">View Cart</button>
+    <div class="response" id="viewcart_response"></div>
+</section>
+
+<script>
+    async function addToCart() {
+        const isbn = document.getElementById('cart_isbn').value;
+        const quantity = parseInt(document.getElementById('cart_quantity').value) || 1;
+
+        const res = await fetch(base + 'cart/addcart.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ISBN: isbn, quantity })
+        });
+
+        const data = await res.json();
+        document.getElementById('cart_response').innerText = JSON.stringify(data, null, 2);
+    }
+
+    async function viewCart() {
+        const res = await fetch(base + 'cart/viewcart.php'); // create a PHP endpoint that calls viewCart()
+        const data = await res.json();
+        document.getElementById('viewcart_response').innerText = JSON.stringify(data, null, 2);
+    }
+</script>
+
+</body>
+</html>
