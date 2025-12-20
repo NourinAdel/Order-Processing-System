@@ -1,8 +1,6 @@
 <?php
 require_once '../order_fn.php';
 header('Content-Type: application/json');
-session_start();
-
 $customer_id = $_SESSION['customer_id'] ?? null;
 if (!$customer_id) {
     echo json_encode(['success' => false, 'message' => 'Not logged in']);
@@ -16,5 +14,6 @@ $quantity = $data['quantity'] ?? 1;
 echo json_encode(updateCartQuantity($customer_id, $isbn, $quantity));
 echo "API FILE LOADED";
 exit;
+
 
 ?>
