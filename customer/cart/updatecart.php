@@ -12,8 +12,5 @@ $isbn = $data['ISBN'] ?? '';
 $quantity = $data['quantity'] ?? 1;
 
 echo json_encode(updateCartQuantity($customer_id, $isbn, $quantity));
-echo "API FILE LOADED";
-exit;
-
-
 ?>
+
