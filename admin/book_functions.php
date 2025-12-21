@@ -161,4 +161,42 @@ function searchBooks($search_type, $keyword) {
     closeDBConnection($conn);
     return $books;
 }
+
+function getBookDetails($isbn) {
+    $conn = getDBConnection();
+    $isbn = mysqli_real_escape_string($conn, $isbn);
+    
+    // Get book info with publisher
+    $query = "SELECT b.*, p.name as publisher_name, p.address as publisher_address, p.phone as publisher_phone
+              FROM Book b 
+              JOIN Publisher p ON b.publisher_id = p.publisher_id 
+              WHERE b.ISBN = '$isbn'";
+    
+    $result = mysqli_query($conn, $query);
+    
+    if (!$result || mysqli_num_rows($result) == 0) {
+        closeDBConnection($conn);
+        return ['success' => false, 'error' => 'Book not found'];
+    }
+    
+    $book = mysqli_fetch_assoc($result);
+    
+    $author_query = "SELECT a.author_id, a.name 
+                    FROM Author a 
+                    JOIN Book_Author ba ON a.author_id = ba.author_id 
+                    WHERE ba.ISBN = '$isbn'";
+    $author_result = mysqli_query($conn, $author_query);
+    
+    $authors = [];
+    if ($author_result) {
+        while ($author_row = mysqli_fetch_assoc($author_result)) {
+            $authors[] = $author_row;
+        }
+    }
+    
+    $book['authors'] = $authors;
+    closeDBConnection($conn);
+    
+    return ['success' => true, 'book' => $book];
+}
 ?>
