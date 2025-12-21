@@ -1,9 +1,7 @@
 <?php
-// get_publishers.php
 header('Content-Type: application/json');
 
-// Adjust path based on your folder structure
-require_once '../db_connection.php';  // ONE level up
+require_once '../db_connection.php';  
 
 $conn = getDBConnection();
 

@@ -133,9 +133,31 @@ function searchBooks($search_type, $keyword) {
     
     $result = mysqli_query($conn, $query);
     $books = [];
-    while ($row = mysqli_fetch_assoc($result)) {
-        $books[] = $row;
+    
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            // === NEW: Get authors for this book ===
+            $isbn = $row['ISBN'];
+            $author_query = "SELECT a.name 
+                           FROM Author a 
+                           JOIN Book_Author ba ON a.author_id = ba.author_id 
+                           WHERE ba.ISBN = '$isbn'";
+            $author_result = mysqli_query($conn, $author_query);
+            
+            $authors = [];
+            if ($author_result) {
+                while ($author_row = mysqli_fetch_assoc($author_result)) {
+                    $authors[] = $author_row['name'];
+                }
+            }
+            
+            $row['authors'] = $authors;
+            // === END NEW CODE ===
+            
+            $books[] = $row;
+        }
     }
+    
     closeDBConnection($conn);
     return $books;
 }
