@@ -181,20 +181,25 @@ function getBookDetails($isbn) {
     
     $book = mysqli_fetch_assoc($result);
     
+    // Get authors
     $author_query = "SELECT a.author_id, a.name 
-                    FROM Author a 
-                    JOIN Book_Author ba ON a.author_id = ba.author_id 
-                    WHERE ba.ISBN = '$isbn'";
+                     FROM Author a 
+                     JOIN Book_Author ba ON a.author_id = ba.author_id 
+                     WHERE ba.ISBN = '$isbn'";
     $author_result = mysqli_query($conn, $author_query);
     
     $authors = [];
+    $author_ids = [];
     if ($author_result) {
         while ($author_row = mysqli_fetch_assoc($author_result)) {
             $authors[] = $author_row;
+            $author_ids[] = (int)$author_row['author_id'];
         }
     }
     
-    $book['authors'] = $authors;
+    $book['authors'] = $authors;       // full author objects (optional for display)
+    $book['author_ids'] = $author_ids; // for JS selection
+    
     closeDBConnection($conn);
     
     return ['success' => true, 'book' => $book];
