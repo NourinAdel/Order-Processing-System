@@ -301,28 +301,33 @@ function checkoutSimplified($customer_id, $card_number, $expiry_date) {
 }
 
 #ORDER HISTORY 
-function getOrderHistory($customer_id) {
+ffunction getOrderHistory($customer_id) {
     global $conn;
 
-    $stmt = $conn->prepare("SELECT o.order_id, o.order_date, o.total_amount,
-                           oi.ISBN, b.title, oi.quantity, oi.price_at_purchase,
-                           (oi.quantity * oi.price_at_purchase) as item_total,
-                           GROUP_CONCAT(DISTINCT a.name SEPARATOR ', ') as authors
-                           FROM `Order` o
-                           JOIN Order_Item oi ON o.order_id = oi.order_id
-                           JOIN Book b ON oi.ISBN = b.ISBN
-                           LEFT JOIN Book_Author ba ON b.ISBN = ba.ISBN
-                           LEFT JOIN Author a ON ba.author_id = a.author_id
-                           WHERE o.customer_id = ?
-                           GROUP BY o.order_id, oi.ISBN
-                           ORDER BY o.order_date DESC");
+    $stmt = $conn->prepare("
+        SELECT o.order_id, o.order_date, o.total_amount,
+               oi.ISBN, b.title, oi.quantity, oi.price_at_purchase,
+               (oi.quantity * oi.price_at_purchase) AS item_total,
+               GROUP_CONCAT(DISTINCT a.name SEPARATOR ', ') AS authors
+        FROM `Order` o
+        JOIN Order_Item oi ON o.order_id = oi.order_id
+        JOIN Book b ON oi.ISBN = b.ISBN
+        LEFT JOIN Book_Author ba ON b.ISBN = ba.ISBN
+        LEFT JOIN Author a ON ba.author_id = a.author_id
+        WHERE o.customer_id = ?
+        GROUP BY o.order_id, oi.ISBN, b.title, oi.quantity, oi.price_at_purchase
+        ORDER BY o.order_date DESC
+    ");
+
     $stmt->bind_param("i", $customer_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
     $orders = [];
+
     while ($row = $result->fetch_assoc()) {
         $order_id = $row['order_id'];
+
         if (!isset($orders[$order_id])) {
             $orders[$order_id] = [
                 'order_id' => $order_id,
@@ -331,6 +336,7 @@ function getOrderHistory($customer_id) {
                 'items' => []
             ];
         }
+
         $orders[$order_id]['items'][] = [
             'ISBN' => $row['ISBN'],
             'title' => $row['title'],
@@ -341,6 +347,6 @@ function getOrderHistory($customer_id) {
         ];
     }
 
-    return ['success' => true, 'orders' => array_values($orders)];
+    return array_values($orders); 
 }
 ?>

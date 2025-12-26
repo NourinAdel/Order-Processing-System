@@ -12,5 +12,5 @@ $orders= getOrderHistory($customer_id);
 echo json_encode([
     'success' =>true,
     'orders' => $orders
-]):
+]);
 ?>
