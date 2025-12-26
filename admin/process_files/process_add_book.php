@@ -64,10 +64,45 @@ if (mysqli_num_rows($check_result) > 0) {
     echo json_encode(['success' => false, 'error' => 'ISBN already exists']);
     exit();
 }
-closeDBConnection($conn);
 
 // Call the function to add the book
 $result = addNewBook($book_data);
+
+
+if ($result['success']) {
+
+    $stock = $book_data['stock'];
+    $threshold = $book_data['threshold'];
+    $isbn = $book_data['isbn'];
+    $publisher_id = $book_data['publisher_id'];
+    $admin_id = $_SESSION['admin_id'];
+
+    if ($stock < $threshold) {
+
+        $reorderQty = max(10, $threshold * 2);
+
+        $conn = getDBConnection();
+
+        $stmt = $conn->prepare("
+            INSERT INTO replenishment_order
+            (order_date, quantity, status, ISBN, publisher_id, admin_id)
+            VALUES (NOW(), ?, 'Pending', ?, ?, ?)
+        ");
+
+        $stmt->bind_param(
+            "isii",
+            $reorderQty,
+            $isbn,
+            $publisher_id,
+            $admin_id
+        );
+
+        $stmt->execute();
+        $stmt->close();
+
+        closeDBConnection($conn);
+    }
+}
 
 // Return the result
 echo json_encode($result);
