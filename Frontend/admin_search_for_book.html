@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<head>
+    <title>Admin - Modify Books</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h3>Modify Existing Book</h3>
+
+    <div style="background: #f4f4f4; padding: 15px; margin-bottom: 20px;">
+    <label>Search Book:</label>
+
+    <select id="searchTypeSelect">
+        <option value="isbn">ISBN</option>
+        <option value="title">Title</option>
+        <option value="category">Category</option>
+        <option value="author">Author</option>
+        <option value="publisher">Publisher</option>
+    </select>
+
+    <input type="text" id="searchInput" placeholder="Enter keyword">
+
+    <button type="button" onclick="searchBook()">Search</button>
+</div>
+
+    <div id="results-container" style="margin-bottom: 20px;"></div>
+
+
+    <button onclick="window.location.href = 'adminrole.html'" class="AdminPageButton">Back</button>
+
+<script>
+const resultsContainer = document.getElementById('results-container');
+
+function searchBook() {
+    const searchType = document.getElementById('searchTypeSelect').value;
+    const keyword = document.getElementById('searchInput').value.trim();
+
+    if (!keyword) {
+        alert("Please enter a search keyword");
+        return;
+    }
+
+    const url = `../admin/process_files/process_search_books.php?type=${searchType}&keyword=${encodeURIComponent(keyword)}`;
+
+    resultsContainer.innerHTML = '<p>Searching...</p>';
+
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success || data.books.length === 0) {
+                resultsContainer.innerHTML =
+                    '<p style="color:red;">No books found.</p>';
+                return;
+            }
+
+            resultsContainer.innerHTML = `<h4>Search Results (${data.count})</h4>`;
+
+            data.books.forEach(book => {
+                const div = document.createElement('div');
+                div.style.border = '2px solid #7D4E32';
+                div.style.padding = '12px';
+                div.style.marginBottom = '10px';
+                div.style.borderRadius = '8px';
+                div.style.background = '#fdfdfd';
+
+                div.innerHTML = `
+                    <b>Title:</b> ${book.title}<br>
+                    <b>ISBN:</b> ${book.ISBN}<br>
+                    <b>Category:</b> ${book.category ?? '—'}<br>
+                    <b>Publisher:</b> ${book.publisher_name ?? '—'}<br>
+                    <b>Price:</b> ${book.price}<br>
+                    <b>Stock:</b> ${book.stock_quantity}
+                `;
+
+                resultsContainer.appendChild(div);
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            resultsContainer.innerHTML =
+                '<p style="color:red;">Connection error. Check process_search_books.php</p>';
+        });
+}
+</script>
+
+
+</body>
+</html>

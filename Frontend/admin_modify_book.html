@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<head>
+    <title>Admin - Modify Books</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h3>Modify Existing Book</h3>
+
+    <div id="message-container"></div>
+
+    <div style="background: #f4f4f4; padding: 15px; margin-bottom: 20px;">
+        <label for="search_isbn">Search Book by ISBN:</label>
+        <input type="text" id="search_isbn" placeholder="Enter ISBN">
+        <button type="button" onclick="searchBook()">Search</button>
+    </div>
+
+    <form id="ModifyBookForm">
+        <label for="isbn">ISBN</label>
+        <input type="text" id="isbn" name="isbn" readonly><br>
+
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br>
+
+        <label for="authors">Author(s):</label>
+        <select id="authors" name="authors[]" multiple required style="height: 100px;">
+        </select><br>
+
+        <label for="publisher_id">Publisher:</label>
+        <select id="publisher_id" name="publisher_id" required>
+        </select><br>
+
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price" step="0.01" required><br>
+
+        <label for="stock">Quantity in Stock (Update here when sold):</label>
+        <input type="number" id="stock" name="stock" required><br>
+        <br>
+        <input type="submit" value="Save Changes">
+    </form>
+
+    <button onclick="window.location.href = 'adminrole.html'" class="AdminPageButton">Back</button>
+
+<script>
+const modifyForm = document.getElementById('ModifyBookForm');
+const messageContainer = document.getElementById('message-container');
+const authorSelect = document.getElementById('authors');
+const publisherSelect = document.getElementById('publisher_id');
+
+function searchBook() {
+    const isbnInput = document.getElementById('search_isbn').value;
+    if (!isbnInput) return alert("Please enter an ISBN");
+
+    fetch(`../admin/process_files/process_get_book.php?isbn=${isbnInput}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('isbn').value = data.book.ISBN;
+                document.getElementById('title').value = data.book.title;
+                document.getElementById('price').value = data.book.price;
+                document.getElementById('stock').value = data.book.stock_quantity;
+                publisherSelect.value = data.book.publisher_id;
+
+                // Select correct authors
+                Array.from(authorSelect.options).forEach(option => {
+                    option.selected = data.book.author_ids.includes(parseInt(option.value));
+                });
+
+                messageContainer.innerHTML = '<p style="color:blue;">Book found. You can now edit details.</p>';
+            } else {
+                messageContainer.innerHTML = `<p style="color:red;">${data.error}</p>`;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            messageContainer.innerHTML = `<p style="color:red;">Connection error. Check get_book.php</p>`;
+        });
+}
+
+function loadAuthors() { 
+    fetch('../admin/process_files/process_get_authors.php')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                authorSelect.innerHTML = '';
+                data.authors.forEach(a => {
+                    const option = document.createElement('option');
+                    option.value = a.author_id;
+                    option.textContent = a.name;
+                    authorSelect.appendChild(option);
+                });
+            } else {
+                authorSelect.innerHTML = '<option value="">Error loading authors</option>';
+            }
+        })
+        .catch(err => {
+            authorSelect.innerHTML = '<option value="">Connection Error</option>';
+            console.error(err);
+        });
+}
+
+function loadPublishers() { 
+    fetch('../admin/process_files/process_get_publishers.php')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                publisherSelect.innerHTML = '<option value="">Select Publisher</option>';
+                data.publishers.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.publisher_id;
+                    option.textContent = p.name;
+                    publisherSelect.appendChild(option);
+                });
+            } else {
+                publisherSelect.innerHTML = '<option value="">Error loading publishers</option>';
+                console.error(data.error);
+            }
+        })
+        .catch(err => {
+            publisherSelect.innerHTML = '<option value="">Connection Error</option>';
+            console.error(err);
+        });
+}
+
+loadAuthors();
+loadPublishers();
+
+modifyForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append('isbn', document.getElementById('isbn').value);
+    formData.append('title', document.getElementById('title').value);
+    formData.append('publisher_id', publisherSelect.value);
+    formData.append('price', document.getElementById('price').value);
+    formData.append('stock', document.getElementById('stock').value);
+
+    // Append all selected authors
+    Array.from(authorSelect.selectedOptions).forEach(option => {
+        formData.append('authors[]', option.value);
+    });
+
+    fetch('../admin/process_files/process_update_book.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log(data);
+        if (data.success) {
+            messageContainer.innerHTML = `<p style="color:green; font-weight:bold;">Update successful!</p>`;
+        } else {
+            messageContainer.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+        }
+    })
+    .catch(err => {
+        console.error('Fetch error:', err);
+        messageContainer.innerHTML = `<p style="color:red;">Connection error. Check process_update_book.php</p>`;
+    });
+});
+</script>
+
+</body>
+</html>

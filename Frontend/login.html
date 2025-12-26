@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Ordering Website</title>
+    <style>
+        .LoginForm {
+            display: none;
+        }
+    </style>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    
+<h1>Welcome to Our Bookstore!</h1>
+<h2>Please choose your role.</h2>
+
+<div class="FormDiv">
+
+<button class="Form" id="AdminLoginButton">Admin</button><br> 
+<button class="Form" id="CustomerLoginButton">Customer</button><br>
+<br>
+<form class="LoginForm" id="AdminLoginForm" method="POST" action="../admin/process_files/process_login.php"> 
+    <h3>Admin Login</h3>  
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username"><br>
+    <label for="password">Password:</label> 
+    <input type="password" id="password" name="password"><br>
+    <p id="admin-error-msg" style="color: rgb(227, 116, 116); font-weight: bold;text-align: center;"></p>
+    <br>
+    <input type="submit" value="Login">
+
+</form>
+
+<form class="LoginForm" id="CustomerLoginForm">
+    <h3>Customer Login</h3>
+    <label for="customername">Username:</label>
+    <input type="text" id="customername" name="customername"><br>
+    <label for="customerpass">Password:</label>
+    <input type="password" id="customerpass" name="customerpass"><br>
+    <br>
+    <input type="submit" value="Login">
+</form>
+</div>
+
+<script>
+    const AdminLoginButton = document.getElementById('AdminLoginButton');
+    const CustomerLoginButton = document.getElementById('CustomerLoginButton');
+
+    const AdminLoginForm = document.getElementById('AdminLoginForm');
+    const CustomerLoginForm = document.getElementById('CustomerLoginForm');
+
+    AdminLoginButton.addEventListener('click', function(){
+        AdminLoginForm.style.display = 'block';
+        CustomerLoginForm.style.display = 'none';
+    });
+
+    CustomerLoginButton.addEventListener('click', function(){
+        CustomerLoginForm.style.display = 'block';
+        AdminLoginForm.style.display = 'none';
+    });
+
+AdminLoginForm.addEventListener('submit', function(e) {
+    e.preventDefault(); 
+
+    const formData = new FormData(this);
+    const errorDisplay = document.getElementById('admin-error-msg');
+
+    fetch('../admin/process_files/process_login.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = 'adminrole.html'; 
+        } else {
+            errorDisplay.textContent = data.error;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorDisplay.textContent = "Server error. Check if XAMPP is running.";
+    });
+});
+</script>
+
+</body>
+</html>

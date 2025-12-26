@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Ordering Website - System Reports</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .report-section { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table, th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .result-area { margin-top: 10px; font-weight: bold; color: #2c3e50; }
+        .back { display: block; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="report-section">
+    <h3>Sales Reports</h3>
+    <button onclick="fetchReport('sales_previous_month')" class="SystemReports">Get Previous Month Total Sales</button>
+    <hr>
+    <label>Sales by Date:</label>
+    <input type="date" id="salesDate">
+    <button onclick="fetchSalesByDay()" class="SystemReports">Get Daily Total</button>
+    <div id="sales-result" class="result-area"></div>
+</div>
+
+<div class="report-section">
+    <h3>Rankings (Last 3 Months)</h3>
+    <button onclick="fetchTableReport('top_customers')" class="SystemReports">Top 5 Customers</button>
+    <button onclick="fetchTableReport('top_books')" class="SystemReports">Top 10 Selling Books</button>
+    <div id="table-result"></div>
+</div>
+
+<div class="report-section">
+    <h3>Book Statistics</h3>
+    <input type="text" id="bookIsbn" placeholder="Enter Book ISBN">
+    <button onclick="fetchBookStats()" class="SystemReports">Check Times Ordered</button>
+    <div id="book-result" class="result-area"></div>
+</div>
+
+<button onclick="window.location.href='adminrole.html'" class="back">Back</button>
+
+<script>
+function fetchReport(reportType) {
+    fetch(`../admin/process_files/process_reports.php?report_type=${reportType}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('sales-result').innerHTML = `<span style="color:red;">${data.error}</span>`;
+            } else {
+                document.getElementById('sales-result').innerHTML = `Total Sales: $${data.total_sales}`;
+            }
+        });
+}
+
+function fetchSalesByDay() {
+    const date = document.getElementById('salesDate').value;
+    if (!date) return alert("Select a date");
+    
+    fetch(`../admin/process_files/process_reports.php?report_type=sales_by_date&date=${date}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('sales-result').innerHTML = `<span style="color:red;">${data.error}</span>`;
+            } else {
+                document.getElementById('sales-result').innerHTML = `Total Sales for ${date}: $${data.total_sales}`;
+            }
+        });
+}
+
+function fetchTableReport(reportType) {
+    fetch(`../admin/process_files/process_reports.php?report_type=${reportType}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('table-result').innerHTML = `<span style="color:red;">${data.error}</span>`;
+                return;
+            }
+
+            let html = '<table><thead><tr>';
+            
+            if (reportType === 'top_customers') {
+                html += '<th>Customer Name</th><th>Total Spent</th></tr></thead><tbody>';
+                data.forEach(item => {  // use 'data' directly since PHP returns an array
+                    html += `<tr><td>${item.first_name} ${item.last_name}</td><td>$${item.total_spent}</td></tr>`;
+                });
+            } else {
+                html += '<th>Book Title</th><th>Copies Sold</th></tr></thead><tbody>';
+                data.forEach(item => {
+                    html += `<tr><td>${item.title}</td><td>${item.total_sold}</td></tr>`;
+                });
+            }
+            
+            html += '</tbody></table>';
+            document.getElementById('table-result').innerHTML = html;
+        });
+}
+
+function fetchBookStats() {
+    const isbn = document.getElementById('bookIsbn').value.trim();
+    if (!isbn) return alert("Enter a book ISBN");
+
+    fetch(`../admin/process_files/process_reports.php?report_type=book_reorders&isbn=${isbn}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('book-result').innerHTML =
+                    `<span style="color:red;">${data.error}</span>`;
+            } else {
+                document.getElementById('book-result').innerHTML =
+                    `This book has been ordered ${data.times_reordered} times.`;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('book-result').innerHTML =
+                `<span style="color:red;">Connection error</span>`;
+        });
+}
+
+
+
+</script>
+
+</body>
+</html>

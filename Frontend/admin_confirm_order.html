@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Replenishment Orders</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Scoped styles for the orders list */
+        #orders-list { margin-top: 20px; }
+        .order-card {
+            border: 2px solid #7D4E32;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fdfdfd;
+        }
+        .order-details b { color: #7D4E32; }
+        .confirm-btn {
+            background-color: #7D4E32;
+            color: #FEF9EF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .confirm-btn:hover { background-color: #5a3824; }
+    </style>
+</head>
+<body>
+
+    <h3>Pending Replenishment Orders</h3>
+    <div id="message-container"></div>
+
+    <div id="orders-list">
+        <p>Checking for pending orders...</p>
+    </div>
+
+    <button onclick="window.location.href = 'adminrole.html'" class="SystemReports">Back</button>
+
+    <script>
+        const ordersList = document.getElementById('orders-list');
+        const messageContainer = document.getElementById('message-container');
+        
+function loadOrders() {
+    fetch('../admin/process_files/process_get_orders.php')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                ordersList.innerHTML = '<p>Error loading pending orders.</p>';
+                console.error(data.error);
+                return;
+            }
+
+            ordersList.innerHTML = '';
+
+            if (data.orders.length === 0) {
+                ordersList.innerHTML = '<p>No pending orders.</p>';
+                return;
+            }
+
+            data.orders.forEach(order => {
+                const card = document.createElement('div');
+                card.className = 'order-card';
+                card.innerHTML = `
+                    <div class="order-details">
+                        <b>Book:</b> ${order.title}<br>
+                        <b>Publisher:</b> ${order.publisher_name}<br>
+                        <b>Quantity:</b> ${order.quantity} units<br>
+                        <b>Date:</b> ${order.order_date}
+                    </div>
+                    <button class="confirm-btn" onclick="confirmOrder(${order.reorder_id})">
+                        Confirm Arrival
+                    </button>
+                `;
+                ordersList.appendChild(card);
+            });
+        })
+        .catch(err => {
+            console.error('Error loading orders:', err);
+            ordersList.innerHTML = '<p>Error loading pending orders.</p>';
+        });
+}
+
+        function confirmOrder(reorderId) {
+            if (!confirm("Has this order arrived at the warehouse?")) return;
+
+            const formData = new FormData();
+            formData.append('reorder_id', reorderId);
+
+            fetch('../admin/process_files/process_confirm_order.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    messageContainer.innerHTML = '<p style="color: green;">Order confirmed! Stock updated.</p>';
+                    loadOrders(); 
+                } else {
+                    messageContainer.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                }
+            })
+            .catch(err => {
+                messageContainer.innerHTML = '<p style="color: red;">Network error. Please try again.</p>';
+            });
+        }
+
+        loadOrders();
+    </script>
+</body>
+</html>
