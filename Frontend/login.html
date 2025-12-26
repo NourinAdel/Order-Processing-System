@@ -34,55 +34,98 @@
 
 <form class="LoginForm" id="CustomerLoginForm">
     <h3>Customer Login</h3>
-    <label for="customername">Username:</label>
-    <input type="text" id="customername" name="customername"><br>
-    <label for="customerpass">Password:</label>
-    <input type="password" id="customerpass" name="customerpass"><br>
-    <br>
-    <input type="submit" value="Login">
+    <input type="text" name="username" placeholder="Username">
+    <input type="password" name="password" placeholder="Password">
+    <p id="customer-error" style="color:red;"></p>
+    <button type="submit">Login</button>
+    <p>
+        No account?
+        <a href="#" id="showRegister">Sign up</a>
+    </p>
+</form>
+
+<form class="LoginForm" id="CustomerRegisterForm">
+    <h3>Customer Sign Up</h3>
+    <input name="username" placeholder="Username">
+    <input name="password" type="password" placeholder="Password">
+    <input name="first_name" placeholder="First name">
+    <input name="last_name" placeholder="Last name">
+    <input name="email" placeholder="Email">
+    <input name="phone" placeholder="Phone">
+    <input name="shipping_address" placeholder="Shipping address">
+    <p id="register-error" style="color:red;"></p>
+    <button type="submit">Register</button>
 </form>
 </div>
 
 <script>
-    const AdminLoginButton = document.getElementById('AdminLoginButton');
-    const CustomerLoginButton = document.getElementById('CustomerLoginButton');
+const adminBtn = document.getElementById('AdminLoginButton');
+const customerBtn = document.getElementById('CustomerLoginButton');
 
-    const AdminLoginForm = document.getElementById('AdminLoginForm');
-    const CustomerLoginForm = document.getElementById('CustomerLoginForm');
+const adminForm = document.getElementById('AdminLoginForm');
+const customerForm = document.getElementById('CustomerLoginForm');
+const registerForm = document.getElementById('CustomerRegisterForm');
 
-    AdminLoginButton.addEventListener('click', function(){
-        AdminLoginForm.style.display = 'block';
-        CustomerLoginForm.style.display = 'none';
-    });
+adminBtn.onclick = () => {
+    adminForm.style.display = 'block';
+    customerForm.style.display = 'none';
+    registerForm.style.display = 'none';
+};
 
-    CustomerLoginButton.addEventListener('click', function(){
-        CustomerLoginForm.style.display = 'block';
-        AdminLoginForm.style.display = 'none';
-    });
+customerBtn.onclick = () => {
+    customerForm.style.display = 'block';
+    adminForm.style.display = 'none';
+    registerForm.style.display = 'none';
+};
 
-AdminLoginForm.addEventListener('submit', function(e) {
-    e.preventDefault(); 
+document.getElementById('showRegister').onclick = () => {
+    registerForm.style.display = 'block';
+    customerForm.style.display = 'none';
+};
 
-    const formData = new FormData(this);
-    const errorDisplay = document.getElementById('admin-error-msg');
-
+adminForm.onsubmit = e => {
+    e.preventDefault();
     fetch('../admin/process_files/process_login.php', {
         method: 'POST',
-        body: formData
+        body: new FormData(adminForm)
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = 'adminrole.html'; 
-        } else {
-            errorDisplay.textContent = data.error;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        errorDisplay.textContent = "Server error. Check if XAMPP is running.";
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) location.href = 'adminrole.html';
+        else document.getElementById('admin-error').innerText = d.error;
     });
-});
+};
+
+customerForm.onsubmit = e => {
+    e.preventDefault();
+    fetch('../customer/login.php', {
+        method: 'POST',
+        body: new FormData(customerForm)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) location.href = 'customerrole.html';
+        else document.getElementById('customer-error').innerText = d.message;
+    });
+};
+
+registerForm.onsubmit = e => {
+    e.preventDefault();
+    fetch('../customer/register.php', {
+        method: 'POST',
+        body: new FormData(registerForm)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) {
+            alert("Account created. Please log in.");
+            registerForm.style.display = 'none';
+            customerForm.style.display = 'block';
+        } else {
+            document.getElementById('register-error').innerText = d.message;
+        }
+    });
+};
 </script>
 
 </body>

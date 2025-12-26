@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<head>
+    <title>Past Orders</title>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<h3>My Past Orders</h3>
+<div id="message-container"></div>
+
+<div id="orders-list">
+    <p>Loading your orders...</p>
+</div>
+
+    <button onclick="window.location.href = 'customerrole.html'" class="AdminPageButton">Back</button>
+
+<script>
+const ordersList = document.getElementById('orders-list');
+const messageContainer = document.getElementById('message-container');
+
+function loadOrders() {
+    fetch('../customer/cart/order_history.php', {
+        credentials: 'include'
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            ordersList.innerHTML = '<p>Error loading orders.</p>';
+            return;
+        }
+
+        ordersList.innerHTML = '';
+
+        if (data.orders.length === 0) {
+            ordersList.innerHTML = '<p>You have no past orders.</p>';
+            return;
+        }
+
+        data.orders.forEach(order => {
+            const card = document.createElement('div');
+            card.className = 'order-card';
+
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="order-item">
+                        <b>Book:</b> ${item.title}<br>
+                        <b>Authors:</b> ${item.authors || 'N/A'}<br>
+                        <b>Quantity:</b> ${item.quantity}<br>
+                        <b>Price:</b> $${item.price_at_purchase}<br>
+                        <b>Item Total:</b> $${item.item_total}
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="order-header">
+                    <b>Order #:</b> ${order.order_id}<br>
+                    <b>Date:</b> ${order.order_date}<br>
+                    <b>Total:</b> $${order.total_amount}
+                </div>
+                ${itemsHtml}
+            `;
+
+            ordersList.appendChild(card);
+        });
+    })
+    .catch(err => {
+        console.error(err);
+        ordersList.innerHTML = '<p>Error loading orders.</p>';
+    });
+}
+
+loadOrders();
+</script>
+
+</body>
+</html>

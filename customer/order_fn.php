@@ -301,7 +301,7 @@ function checkoutSimplified($customer_id, $card_number, $expiry_date) {
 }
 
 #ORDER HISTORY 
-ffunction getOrderHistory($customer_id) {
+function getOrderHistory($customer_id) {
     global $conn;
 
     $stmt = $conn->prepare("

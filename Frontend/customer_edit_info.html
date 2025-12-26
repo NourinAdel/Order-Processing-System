@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Ordering Website - Edit Information</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="FormDiv">
+
+    <form class="LoginForm" id="CustomerEditForm">
+        <h3>Edit Your Information</h3>
+
+        <input name="username" placeholder="Username"><br>
+        <input name="first_name" placeholder="First name"><br>
+        <input name="last_name" placeholder="Last name"><br>
+        <input name="email" placeholder="Email"><br>
+        <input name="phone" placeholder="Phone"><br>
+        <input name="shipping_address" placeholder="Shipping address"><br>
+        <button onclick="updateProfile()">Update Profile</button><br><br>
+
+        <input type="password" name="old_password" placeholder="Current password">
+        <input type="password" name="new_password" placeholder="New password">
+        <input type="password" name="confirm_password" placeholder="Confirm new password">
+        <button onclick="changePassword()">Change Password</button>
+
+
+        <p id="edit-message"></p>
+    </form>
+
+<button onclick="window.location.href='customerrole.html'" class="back">Back</button>
+
+</div>
+
+<script>
+document.getElementById('CustomerEditForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const profileFields = ['username','first_name','last_name','email','phone','shipping_address'];
+    const profileData = new FormData();
+    profileFields.forEach(field => {
+        const val = this.querySelector(`[name=${field}]`).value.trim();
+        if(val) profileData.append(field, val);
+    });
+
+    if(profileData.has('username') || profileData.has('first_name') || profileData.has('last_name') || profileData.has('email') || profileData.has('phone') || profileData.has('shipping_address')) {
+        const res = await fetch('../customer/update_profile.php', {
+            method: 'POST',
+            body: profileData,
+            credentials: 'include'
+        });
+        const data = await res.json();
+        const msg = document.getElementById('edit-message');
+        msg.style.color = data.success ? 'green' : 'red';
+        msg.textContent = data.message || (data.success ? 'Profile updated successfully' : 'Something went wrong.');
+    }
+
+    const oldPass = this.querySelector('[name=old_password]').value.trim();
+    const newPass = this.querySelector('[name=new_password]').value.trim();
+    const confirmPass = this.querySelector('[name=confirm_password]').value.trim();
+
+    if(oldPass || newPass || confirmPass) {
+        const msg = document.getElementById('edit-message');
+        if(newPass !== confirmPass) {
+            msg.style.color = 'red';
+            msg.textContent = 'New passwords do not match';
+            return;
+        }
+        if(!oldPass || !newPass) {
+            msg.style.color = 'red';
+            msg.textContent = 'Both current and new password are required';
+            return;
+        }
+
+        const passData = new FormData();
+        passData.append('old_password', oldPass);
+        passData.append('new_password', newPass);
+
+        const res = await fetch('../customer/change_password.php', {
+            method: 'POST',
+            body: passData,
+            credentials: 'include'
+        });
+        const data = await res.json();
+        msg.style.color = data.success ? 'green' : 'red';
+        msg.textContent = data.message || (data.success ? 'Password changed successfully' : 'Something went wrong.');
+    }
+
+    this.querySelector('[name=old_password]').value = '';
+    this.querySelector('[name=new_password]').value = '';
+    this.querySelector('[name=confirm_password]').value = '';
+});
+</script>
+
+
+</body>
+</html>

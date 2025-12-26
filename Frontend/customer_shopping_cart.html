@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<head>
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<section>
+    <h2>Add to Cart</h2>
+    <input id="add_isbn" placeholder="Book ISBN">
+    <input id="add_quantity" placeholder="Quantity" type="number" value="1">
+    <button class="SystemReports" onclick="addToCart()">Add to Cart</button>
+    <div class="response" id="add_response"></div>
+</section>
+
+<section>
+    <h2>Remove from Cart</h2>
+    <input id="remove_isbn" placeholder="Book ISBN">
+    <button class="SystemReports" onclick="removeManual()">Remove from Cart</button>
+    <div class="response" id="remove_response"></div>
+</section>
+
+<section>
+    <h2>My Cart</h2>
+    <button class="SystemReports" onclick="viewCart()">Refresh Cart</button>
+
+    <div id="cart-container">
+        <p>Loading cart...</p>
+    </div>
+
+    <div id="cart-total" style="text-align:center; margin-top:10px;"></div>
+</section>
+
+<button class="AdminPageButton" onclick="window.location.href='customer_checkout.html'" class="back">Checkout</button>
+<button class="AdminPageButton" onclick="window.location.href='customerrole.html'" class="back">Back</button>
+</body>
+
+<script>
+async function addToCart() {
+    const isbn = document.getElementById('add_isbn').value.trim();
+    const quantity = parseInt(document.getElementById('add_quantity').value) || 1;
+
+    const res = await fetch('../customer/cart/addcart.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ISBN: isbn, quantity })
+    });
+
+    const data = await res.json();
+    document.getElementById('add_response').innerText =
+        data.message || 'Added to cart';
+
+    viewCart();
+}
+
+async function removeManual() {
+    const isbn = document.getElementById('remove_isbn').value.trim();
+    removeItem(isbn);
+}
+
+async function removeItem(isbn) {
+    const res = await fetch('../customer/cart/removecart.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ISBN: isbn })
+    });
+
+    const data = await res.json();
+    document.getElementById('remove_response').innerText =
+        data.message || 'Removed from cart';
+
+    viewCart();
+}
+
+async function viewCart() {
+    const container = document.getElementById('cart-container');
+    const totalDiv = document.getElementById('cart-total');
+
+    container.innerHTML = '<p>Loading cart...</p>';
+    totalDiv.innerHTML = '';
+
+    try {
+        const res = await fetch('../customer/cart/viewcart.php');
+        const data = await res.json();
+
+        if (!data.success || data.items.length === 0) {
+            container.innerHTML = '<p>Your cart is empty.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+
+        data.items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'order-card';
+
+            card.innerHTML = `
+                <div class="order-details">
+                    <b>Book:</b> ${item.title}<br>
+                    <b>Authors:</b> ${item.authors || 'N/A'}<br>
+                    <b>ISBN:</b> ${item.ISBN}<br>
+                    <b>Quantity:</b> ${item.quantity}<br>
+                    <b>Price:</b> $${item.price}<br>
+                    <b>Item Total:</b> $${item.item_total}<br><br>
+
+                    <button class="SystemReports"
+                        onclick="removeItem('${item.ISBN}')">
+                        Remove
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+
+        totalDiv.innerHTML = `<b>Total: $${data.total}</b>`;
+
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<p>Error loading cart.</p>';
+    }
+}
+
+viewCart();
+</script>
+
+</body>
+</html>
