@@ -293,6 +293,7 @@ function checkoutSimplified($customer_id, $card_number, $expiry_date) {
 function getOrderHistory($customer_id) {
     global $conn;
 
+    // Fixed GROUP BY to include o.order_date and o.total_amount
     $stmt = $conn->prepare("
         SELECT o.order_id, o.order_date, o.total_amount,
                oi.ISBN, b.title, oi.quantity, oi.price_at_purchase,
@@ -304,19 +305,29 @@ function getOrderHistory($customer_id) {
         LEFT JOIN Book_Author ba ON b.ISBN = ba.ISBN
         LEFT JOIN Author a ON ba.author_id = a.author_id
         WHERE o.customer_id = ?
-        GROUP BY o.order_id, oi.ISBN, b.title, oi.quantity, oi.price_at_purchase
+        GROUP BY o.order_id, o.order_date, o.total_amount, oi.ISBN, b.title, oi.quantity, oi.price_at_purchase
         ORDER BY o.order_date DESC
     ");
 
-    $stmt->bind_param("i", $customer_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    if (!$stmt) {
+        error_log('SQL prepare error: ' . $conn->error);
+        return [];
+    }
 
+    $stmt->bind_param("i", $customer_id);
+    
+    if (!$stmt->execute()) {
+        error_log('SQL execute error: ' . $stmt->error);
+        return [];
+    }
+    
+    $result = $stmt->get_result();
     $orders = [];
 
     while ($row = $result->fetch_assoc()) {
         $order_id = $row['order_id'];
 
+        // Create order entry if it doesn't exist
         if (!isset($orders[$order_id])) {
             $orders[$order_id] = [
                 'order_id' => $order_id,
@@ -326,16 +337,21 @@ function getOrderHistory($customer_id) {
             ];
         }
 
+        // Add item to order
         $orders[$order_id]['items'][] = [
             'ISBN' => $row['ISBN'],
             'title' => $row['title'],
-            'authors' => $row['authors'],
+            'authors' => $row['authors'] ?? 'Unknown',
             'quantity' => $row['quantity'],
             'price_at_purchase' => $row['price_at_purchase'],
             'item_total' => $row['item_total']
         ];
     }
 
-    return array_values($orders); 
+    $stmt->close();
+    
+    // Return orders as indexed array
+    return array_values($orders);
 }
+
 ?>
