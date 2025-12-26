@@ -86,26 +86,57 @@ function getCustomerProfile($customer_id) {
 }
 
 /* ================= UPDATE PROFILE ================= */
-function updateCustomerProfile($customer_id, $username, $first_name, $last_name, $email, $phone, $shipping_address) {
+function updateCustomerProfile(
+    $customer_id,
+    $username,
+    $first_name,
+    $last_name,
+    $email,
+    $phone,
+    $shipping_address
+) {
     global $conn;
- $username = trim($username);
-    $email    = trim($email);
-     $stmt = $conn->prepare(
+
+    //Get current data
+    $stmt = $conn->prepare(
+        "SELECT username, first_name, last_name, email, phone, shipping_address
+         FROM Customer
+         WHERE customer_id = ?"
+    );
+    $stmt->bind_param("i", $customer_id);
+    $stmt->execute();
+    $current = $stmt->get_result()->fetch_assoc();
+
+    if (!$current) {
+        return ['success' => false, 'message' => 'Customer not found'];
+    }
+
+    // Keep old values if fields are empty
+    $username         = trim($username)         ?: $current['username'];
+    $first_name       = trim($first_name)       ?: $current['first_name'];
+    $last_name        = trim($last_name)        ?: $current['last_name'];
+    $email            = trim($email)            ?: $current['email'];
+    $phone            = trim($phone)            ?: $current['phone'];
+    $shipping_address = trim($shipping_address) ?: $current['shipping_address'];
+
+    //Check uniqueness 
+    $stmt = $conn->prepare(
         "SELECT customer_id
          FROM Customer
          WHERE (username = ? OR email = ?)
          AND customer_id != ?"
     );
-    $stmt->bind_param("ssi",$username, $email, $customer_id);
+    $stmt->bind_param("ssi", $username, $email, $customer_id);
     $stmt->execute();
 
     if ($stmt->get_result()->num_rows > 0) {
-        return ['success' => false, 'message' => 'Email or username already in use'];
+        return ['success' => false, 'message' => 'Username or email already in use'];
     }
 
+    //Update
     $stmt = $conn->prepare(
         "UPDATE Customer
-         SET username=?,first_name = ?, last_name = ?, email = ?, phone = ?, shipping_address = ?
+         SET username = ?, first_name = ?, last_name = ?, email = ?, phone = ?, shipping_address = ?
          WHERE customer_id = ?"
     );
     $stmt->bind_param(
@@ -122,6 +153,7 @@ function updateCustomerProfile($customer_id, $username, $first_name, $last_name,
 
     return ['success' => true];
 }
+
 
 /* ================= CHANGE PASSWORD ================= */
 function changePassword($customer_id, $old_password, $new_password) {
