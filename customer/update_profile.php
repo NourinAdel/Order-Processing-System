@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $response = updateCustomerProfile(
         $_SESSION['customer_id'],
+         $_POST['username'] ?? '',
         $_POST['first_name'] ?? '',
         $_POST['last_name'] ?? '',
         $_POST['email'] ?? '',

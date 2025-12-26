@@ -86,26 +86,31 @@ function getCustomerProfile($customer_id) {
 }
 
 /* ================= UPDATE PROFILE ================= */
-function updateCustomerProfile($customer_id, $first_name, $last_name, $email, $phone, $shipping_address) {
+function updateCustomerProfile($customer_id, $username, $first_name, $last_name, $email, $phone, $shipping_address) {
     global $conn;
-
-    $stmt = $conn->prepare(
-        "SELECT customer_id FROM Customer WHERE email = ? AND customer_id != ?"
+ $username = trim($username);
+    $email    = trim($email);
+     $stmt = $conn->prepare(
+        "SELECT customer_id
+         FROM Customer
+         WHERE (username = ? OR email = ?)
+         AND customer_id != ?"
     );
-    $stmt->bind_param("si", $email, $customer_id);
+    $stmt->bind_param("ssi",$username, $email, $customer_id);
     $stmt->execute();
 
     if ($stmt->get_result()->num_rows > 0) {
-        return ['success' => false, 'message' => 'Email already in use'];
+        return ['success' => false, 'message' => 'Email or username already in use'];
     }
 
     $stmt = $conn->prepare(
         "UPDATE Customer
-         SET first_name = ?, last_name = ?, email = ?, phone = ?, shipping_address = ?
+         SET username=?,first_name = ?, last_name = ?, email = ?, phone = ?, shipping_address = ?
          WHERE customer_id = ?"
     );
     $stmt->bind_param(
-        "sssssi",
+        "ssssssi",
+        $username,
         $first_name,
         $last_name,
         $email,
