@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<head>
+    <title>Checkout</title>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+    <h1>Checkout</h1>
+
+    <section>
+        <h2>My Cart</h2>
+        <button class="SystemReports" onclick="viewCart()">Refresh Cart</button>
+
+        <div id="cart-container">
+            <p>Loading cart...</p>
+        </div>
+
+        <div id="cart-total" style="text-align:center; margin-top:10px;"></div>
+    </section>
+
+    <section>
+        <h2>Payment</h2>
+        <input id="card_number" placeholder="Card Number (16 digits)">
+        <input id="expiry_date" placeholder="Expiry Date (MM/YY)">
+        <button onclick="checkout()" class="SystemReports">Checkout</button>
+        <div class="response" id="checkout_response"></div>
+    </section>
+
+        <button onclick="window.location.href = 'customerrole.html'" class="AdminPageButton">Back</button>
+
+    </body>
+
+    <script>
+        // Load cart items
+        async function viewCart() {
+            const container = document.getElementById('cart-container');
+            const totalDiv = document.getElementById('cart-total');
+
+            container.innerHTML = '<p>Loading cart...</p>';
+            totalDiv.innerHTML = '';
+
+            try {
+                const res = await fetch('../customer/cart/viewcart.php');
+                const data = await res.json();
+
+                if (!data.success || data.items.length === 0) {
+                    container.innerHTML = '<p>Your cart is empty.</p>';
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                data.items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'order-card';
+
+                    card.innerHTML = `
+                        <div class="order-details">
+                            <b>Book:</b> ${item.title}<br>
+                            <b>Authors:</b> ${item.authors || 'N/A'}<br>
+                            <b>ISBN:</b> ${item.ISBN}<br>
+                            <b>Quantity:</b> ${item.quantity}<br>
+                            <b>Price:</b> $${item.price}<br>
+                            <b>Item Total:</b> $${item.item_total}<br><br>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+
+                totalDiv.innerHTML = `<b>Total: $${data.total}</b>`;
+
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<p>Error loading cart.</p>';
+            }
+        }
+        // Checkout function
+        async function checkout() {
+            const card_number = document.getElementById('card_number').value;
+            const expiry_date = document.getElementById('expiry_date').value;
+
+            const res = await fetch('../customer/cart/checkout.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ card_number, expiry_date })
+            });
+
+            const data = await res.json();
+            const responseDiv = document.getElementById('checkout_response');
+            responseDiv.innerText = data.message || JSON.stringify(data, null, 2);
+
+            if (data.success) {
+                viewCart(); // Refresh cart after successful checkout
+            }
+        }
+
+        // Auto-load cart on page load
+        viewCart();
+    </script>
+</html>

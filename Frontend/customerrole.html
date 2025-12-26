@@ -11,6 +11,21 @@
         <button onclick="window.location.href = 'customer_search_for_book.html'" class="AdminPageButton">Search for Books</button><br>
         <button onclick="window.location.href = 'customer_shopping_cart.html'" class="AdminPageButton">Shopping Cart</button><br>
         <button onclick="window.location.href = 'customer_view_orders.html'" class="AdminPageButton">View Past Orders</button><br>
-        <button onclick="window.location.href = 'login.html'" id="Logout" class="AdminPageButton">Logout</button><br>
+        <button onclick="logout()" id="Logout" class="AdminPageButton">Logout</button><br>
+
     </div>
 </body>
+
+<script>
+async function logout() {
+    try {
+        await fetch('../customer/logout.php', {
+            credentials: 'include'
+        });
+        window.location.href = 'login.html';
+    } catch (err) {
+        console.error('Logout failed', err);
+    }
+}
+</script>
+

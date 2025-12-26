@@ -1,4 +1,5 @@
 <?php
+require_once 'order_fn.php';
 require_once 'connection.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -182,10 +183,19 @@ function changePassword($customer_id, $old_password, $new_password) {
 
 /* ================= LOGOUT ================= */
 function logoutCustomer() {
+    // Clear cart first
+    if (isset($_SESSION['customer_id'])) {
+        $customer_id = $_SESSION['customer_id'];
+        clearCart($customer_id); // removes all items from the cart in DB
+    }
+
+    // Destroy session
     session_unset();
     session_destroy();
-    return ['success' => true];
+
+    return ['success' => true, 'message' => 'Logged out and cart cleared'];
 }
+
 
 /* ================= API HANDLER ================= 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

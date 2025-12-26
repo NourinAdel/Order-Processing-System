@@ -268,18 +268,7 @@ function checkoutSimplified($customer_id, $card_number, $expiry_date) {
         $stmt = $conn->prepare("INSERT INTO Order_Item (order_id, ISBN, quantity, price_at_purchase) VALUES (?, ?, ?, ?)");
         foreach ($cart_data['items'] as $item) {
             $stmt->bind_param("isid", $order_id, $item['ISBN'], $item['quantity'], $item['price']);
-            $stmt->execute();
-            $updateStock = $conn->prepare(
-                "UPDATE Book 
-                 SET stock_quantity = stock_quantity - ? 
-                 WHERE ISBN = ? AND stock_quantity >= ?");
-            $updateStock->bind_param("iss", $item['quantity'], $item['ISBN'], $item['quantity']);
-            $updateStock->execute();
-
-            // Check if stock deduction failed (insufficient stock)
-            if ($updateStock->affected_rows === 0) {
-                throw new Exception("Insufficient stock for ISBN: " . $item['ISBN']);
-            }      
+            $stmt->execute();      
         }
         
         // Clear cart
