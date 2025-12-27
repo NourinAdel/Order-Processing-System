@@ -1,17 +1,14 @@
 <?php
 // customer/cart/order_history.php
 require_once '../order_fn.php';
-
-// Start session if not already started (order_fn.php should handle this, but just in case)
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 header('Content-Type: application/json');
 
-// Enable error reporting for debugging (remove in production)
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // Don't display errors in output, but log them
+ini_set('display_errors', 0); 
 ini_set('log_errors', 1);
 
 // Check if customer is logged in
@@ -26,7 +23,6 @@ try {
     // Get order history
     $orders = getOrderHistory($customer_id);
     
-    // Return success response
     echo json_encode([
         'success' => true,
         'orders' => $orders
@@ -42,4 +38,5 @@ try {
         'message' => 'Server error: ' . $e->getMessage()
     ]);
 }
+
 ?>
