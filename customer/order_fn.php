@@ -185,7 +185,6 @@ function validateCreditCardSimple($card_number, $expiry_date) {
     // Remove all non-digits
     $card_number = preg_replace('/\D/', '', $card_number);
     
-    // Basic length check (most cards are 16 digits)
     if (strlen($card_number) != 16) {
         return false;
     }
@@ -222,17 +221,11 @@ function validateCreditCardSimple($card_number, $expiry_date) {
 
 function checkoutSimplified($customer_id, $card_number, $expiry_date) {
     global $conn;
-    
-    // SIMPLE VALIDATION - Perfect for student project
     $card_number = preg_replace('/\s+/', '', $card_number);
     $clean_card = preg_replace('/\D/', '', $card_number);
-    
-    // 1. Basic card validation
     if (strlen($clean_card) !== 16 || !is_numeric($clean_card)) {
         return ['success' => false, 'message' => 'Invalid card number (must be 16 digits)'];
     }
-    
-    // 2. Basic expiry validation
     if (!preg_match('/^(0[1-9]|1[0-2])\/(\d{2})$/', $expiry_date, $matches)) {
         return ['success' => false, 'message' => 'Invalid expiry date (use MM/YY format)'];
     }
@@ -245,14 +238,11 @@ function checkoutSimplified($customer_id, $card_number, $expiry_date) {
     if ($year < $current_year || ($year == $current_year && $month < $current_month)) {
         return ['success' => false, 'message' => 'Card has expired'];
     }
-    
-    // 3. Check cart
     $cart_data = viewCart($customer_id);
     if (empty($cart_data['items'])) {
         return ['success' => false, 'message' => 'Cart is empty'];
     }
     
-    // 4. Process transaction
     $conn->begin_transaction();
     
     try {
@@ -292,8 +282,6 @@ function checkoutSimplified($customer_id, $card_number, $expiry_date) {
 #ORDER HISTORY 
 function getOrderHistory($customer_id) {
     global $conn;
-
-    // Fixed GROUP BY to include o.order_date and o.total_amount
     $stmt = $conn->prepare("
         SELECT o.order_id, o.order_date, o.total_amount,
                oi.ISBN, b.title, oi.quantity, oi.price_at_purchase,
@@ -355,3 +343,4 @@ function getOrderHistory($customer_id) {
 }
 
 ?>
+
