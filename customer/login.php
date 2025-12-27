@@ -1,7 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-require_once 'functions.php'; // make sure this includes loginCustomer()
+require_once 'functions.php'; 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Use $_POST because we're sending form-data
@@ -20,3 +20,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
 }
 ?>
+
