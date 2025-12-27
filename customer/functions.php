@@ -14,6 +14,18 @@ function registerCustomer($username, $password, $first_name, $last_name, $email,
         return ['success' => false, 'message' => 'Required fields missing'];
     }
 
+    if (strlen($password) < 6) {
+        return ['success' => false, 'message' => 'Password must be at least 6 characters.'];
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return ['success' => false, 'message' => 'Invalid email format.'];
+    }
+
+    if (!preg_match('/^[0-9]{10,15}$/', $phone)) {
+        return ['success' => false, 'message' => 'Phone must be 10-15 digits.'];
+    }
+
     $stmt = $conn->prepare(
         "SELECT customer_id FROM Customer WHERE username = ? OR email = ?"
     );
