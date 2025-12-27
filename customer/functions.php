@@ -6,7 +6,6 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/* ================= REGISTER ================= */
 function registerCustomer($username, $password, $first_name, $last_name, $email, $phone, $shipping_address) {
     global $conn;
 
@@ -56,8 +55,6 @@ function registerCustomer($username, $password, $first_name, $last_name, $email,
 
     return ['success' => true, 'customer_id' => $conn->insert_id];
 }
-
-/* ================= LOGIN ================= */
 function loginCustomer($username, $password) {
     global $conn;
 
@@ -98,7 +95,7 @@ function getCustomerProfile($customer_id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-/* ================= UPDATE PROFILE ================= */
+/* UPDATE PROFILE  */
 function updateCustomerProfile(
     $customer_id,
     $username,
@@ -168,7 +165,7 @@ function updateCustomerProfile(
 }
 
 
-/* ================= CHANGE PASSWORD ================= */
+// CHANGE PASSWORD 
 function changePassword($customer_id, $old_password, $new_password) {
     global $conn;
 
@@ -193,9 +190,8 @@ function changePassword($customer_id, $old_password, $new_password) {
     return ['success' => true];
 }
 
-/* ================= LOGOUT ================= */
+//logout
 function logoutCustomer() {
-    // Clear cart first
     if (isset($_SESSION['customer_id'])) {
         $customer_id = $_SESSION['customer_id'];
         clearCart($customer_id); // removes all items from the cart in DB
@@ -207,75 +203,5 @@ function logoutCustomer() {
 
     return ['success' => true, 'message' => 'Logged out and cart cleared'];
 }
-
-
-/* ================= API HANDLER ================= 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    header('Content-Type: application/json');
-    $action = $_POST['action'] ?? '';
-
-    switch ($action) {
-        case 'register':
-            echo json_encode(registerCustomer(
-                $_POST['username'],
-                $_POST['password'],
-                $_POST['first_name'],
-                $_POST['last_name'],
-                $_POST['email'],
-                $_POST['phone'],
-                $_POST['shipping_address']
-            ));
-            break;
-
-        case 'login':
-            echo json_encode(loginCustomer($_POST['username'], $_POST['password']));
-            break;
-
-        case 'get_profile':
-            if (!isset($_SESSION['customer_id'])) {
-                echo json_encode(['success' => false, 'message' => 'Not logged in']);
-                break;
-            }
-            echo json_encode([
-                'success' => true,
-                'profile' => getCustomerProfile($_SESSION['customer_id'])
-            ]);
-            break;
-
-        case 'update_profile':
-            if (!isset($_SESSION['customer_id'])) {
-                echo json_encode(['success' => false, 'message' => 'Not logged in']);
-                break;
-            }
-            echo json_encode(updateCustomerProfile(
-                $_SESSION['customer_id'],
-                $_POST['first_name'],
-                $_POST['last_name'],
-                $_POST['email'],
-                $_POST['phone'],
-                $_POST['shipping_address']
-            ));
-            break;
-
-        case 'change_password':
-            if (!isset($_SESSION['customer_id'])) {
-                echo json_encode(['success' => false, 'message' => 'Not logged in']);
-                break;
-            }
-            echo json_encode(changePassword(
-                $_SESSION['customer_id'],
-                $_POST['old_password'],
-                $_POST['new_password']
-            ));
-            break;
-
-        case 'logout':
-            echo json_encode(logoutCustomer());
-            break;
-
-        default:
-            echo json_encode(['success' => false, 'message' => 'Invalid action']);
-    }
-}
-    */
 ?>
+
