@@ -7,7 +7,6 @@ header('Content-Type: application/json');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// enable mysqli exceptions for proper error catching
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isAdminLoggedIn()) {
@@ -20,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-// Validate required fields
 $required = ['isbn', 'title', 'authors', 'publisher_id', 'price', 'stock'];
 foreach ($required as $field) {
     if (!isset($_POST[$field]) || empty($_POST[$field])) {
@@ -31,7 +29,7 @@ foreach ($required as $field) {
 
 $isbn = $_POST['isbn'];
 $title = $_POST['title'];
-$authors = $_POST['authors']; // array of author IDs
+$authors = $_POST['authors']; 
 $publisher_id = (int)$_POST['publisher_id'];
 $price = (float)$_POST['price'];
 $stock = (int)$_POST['stock'];
@@ -41,19 +39,16 @@ $conn = getDBConnection();
 try {
     mysqli_begin_transaction($conn);
 
-    // Update book table
     $stmt = $conn->prepare("UPDATE Book SET title=?, publisher_id=?, price=?, stock_quantity=? WHERE ISBN=?");
     $stmt->bind_param("siids", $title, $publisher_id, $price, $stock, $isbn);
     $stmt->execute();
     $stmt->close();
 
-    // Delete existing authors
     $stmt = $conn->prepare("DELETE FROM Book_Author WHERE ISBN=?");
     $stmt->bind_param("s", $isbn);
     $stmt->execute();
     $stmt->close();
 
-    // Insert new authors
     $stmt = $conn->prepare("INSERT INTO Book_Author (ISBN, author_id) VALUES (?, ?)");
     foreach ($authors as $author_id) {
         $author_id = (int)$author_id;

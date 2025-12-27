@@ -3,19 +3,16 @@ require_once '../db_connection.php';
 require_once '../auth_functions.php';
 require_once '../book_functions.php';
 
-// Check if admin is logged in
 if (!isAdminLoggedIn()) {
     echo json_encode(['success' => false, 'error' => 'Not authorized']);
     exit();
 }
 
-// Only accept POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Invalid request method']);
     exit();
 }
 
-// Validate required fields
 $required_fields = ['isbn', 'title', 'price', 'category', 'stock', 'threshold', 'publisher_id'];
 foreach ($required_fields as $field) {
     if (!isset($_POST[$field]) || $_POST[$field] === '') {
@@ -24,7 +21,6 @@ foreach ($required_fields as $field) {
     }
 }
 
-// Prepare book data with proper validation
 $book_data = [
     'isbn' => trim($_POST['isbn']),
     'title' => trim($_POST['title']),
@@ -37,7 +33,6 @@ $book_data = [
     'authors' => isset($_POST['authors']) ? (array)$_POST['authors'] : []
 ];
 
-// Additional validation
 if ($book_data['price'] <= 0) {
     echo json_encode(['success' => false, 'error' => 'Price must be greater than 0']);
     exit();
@@ -53,7 +48,6 @@ if ($book_data['threshold'] < 0) {
     exit();
 }
 
-// Check if ISBN already exists
 $conn = getDBConnection();
 $isbn_check = mysqli_real_escape_string($conn, $book_data['isbn']);
 $check_query = "SELECT ISBN FROM Book WHERE ISBN = '$isbn_check'";
@@ -65,7 +59,6 @@ if (mysqli_num_rows($check_result) > 0) {
     exit();
 }
 
-// Call the function to add the book
 $result = addNewBook($book_data);
 
 
@@ -104,6 +97,5 @@ if ($result['success']) {
     }
 }
 
-// Return the result
 echo json_encode($result);
 ?>

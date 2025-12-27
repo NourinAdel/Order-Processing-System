@@ -3,7 +3,7 @@ session_start();
 require_once 'db_connection.php';  
 
 function adminLogin($username, $password) {
-    $conn = getDBConnection();  // Get connection
+    $conn = getDBConnection(); 
     
     $username = mysqli_real_escape_string($conn, $username);
     
@@ -15,12 +15,12 @@ function adminLogin($username, $password) {
         if ($password === $admin['password']) {
             $_SESSION['admin_id'] = $admin['admin_id'];
             $_SESSION['admin_username'] = $admin['username'];
-            closeDBConnection($conn);  // Close connection
+            closeDBConnection($conn);  
             return ['success' => true];
         }
     }
     
-    closeDBConnection($conn);  // Close connection
+    closeDBConnection($conn);  
     return ['success' => false, 'error' => 'Invalid credentials'];
 }
 

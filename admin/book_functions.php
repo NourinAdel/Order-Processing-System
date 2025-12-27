@@ -3,11 +3,9 @@ require_once 'db_connection.php';
 function addNewBook($bookData) {
     $conn = getDBConnection();
     
-    // Extract and sanitize data
     $isbn = mysqli_real_escape_string($conn, $bookData['isbn']);
     $title = mysqli_real_escape_string($conn, $bookData['title']);
     
-    // Handle year - can be NULL
     if ($bookData['year'] === null || $bookData['year'] === '') {
         $year_sql = "NULL";
     } else {
@@ -22,15 +20,12 @@ function addNewBook($bookData) {
     $publisher_id = (int)$bookData['publisher_id'];
     $authors = $bookData['authors'] ?? [];
     
-    // Build SQL query
     $query = "INSERT INTO Book (ISBN, title, publication_year, price, category, 
               stock_quantity, threshold, publisher_id) 
               VALUES ('$isbn', '$title', $year_sql, $price, '$category', 
               $stock, $threshold, $publisher_id)";
     
-    // Execute query
     if (mysqli_query($conn, $query)) {
-        // Add authors if provided
         if (!empty($authors)) {
             foreach ($authors as $author_id) {
                 $author_id = (int)$author_id;
@@ -50,7 +45,6 @@ function addNewBook($bookData) {
 }
 
 function updateBookStock($isbn, $newQuantity, $conn = null) {
-    // Handle connection
     if ($conn === null) {
         $conn = getDBConnection();
         $closeConnection = true;
@@ -61,7 +55,6 @@ function updateBookStock($isbn, $newQuantity, $conn = null) {
     $isbn = mysqli_real_escape_string($conn, $isbn);
     $newQuantity = (int)$newQuantity;
     
-    // The trigger will prevent negative stock
     $query = "UPDATE Book SET stock_quantity = $newQuantity WHERE ISBN = '$isbn'";
     
     try {
@@ -80,7 +73,6 @@ function updateBookStock($isbn, $newQuantity, $conn = null) {
             closeDBConnection($conn);
         }
         
-        // Check if it's the negative stock trigger error
         if (strpos($error, 'cannot be negative') !== false) {
             return ['success' => false, 'error' => 'Stock quantity cannot be negative (trigger prevented it)'];
         }
@@ -136,7 +128,6 @@ function searchBooks($search_type, $keyword) {
     
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
-            // === NEW: Get authors for this book ===
             $isbn = $row['ISBN'];
             $author_query = "SELECT a.name 
                            FROM Author a 
@@ -152,7 +143,6 @@ function searchBooks($search_type, $keyword) {
             }
             
             $row['authors'] = $authors;
-            // === END NEW CODE ===
             
             $books[] = $row;
         }
@@ -166,7 +156,6 @@ function getBookDetails($isbn) {
     $conn = getDBConnection();
     $isbn = mysqli_real_escape_string($conn, $isbn);
     
-    // Get book info with publisher
     $query = "SELECT b.*, p.name as publisher_name, p.address as publisher_address, p.phone as publisher_phone
               FROM Book b 
               JOIN Publisher p ON b.publisher_id = p.publisher_id 
@@ -181,7 +170,6 @@ function getBookDetails($isbn) {
     
     $book = mysqli_fetch_assoc($result);
     
-    // Get authors
     $author_query = "SELECT a.author_id, a.name 
                      FROM Author a 
                      JOIN Book_Author ba ON a.author_id = ba.author_id 
@@ -197,8 +185,8 @@ function getBookDetails($isbn) {
         }
     }
     
-    $book['authors'] = $authors;       // full author objects (optional for display)
-    $book['author_ids'] = $author_ids; // for JS selection
+    $book['authors'] = $authors;       
+    $book['author_ids'] = $author_ids; 
     
     closeDBConnection($conn);
     

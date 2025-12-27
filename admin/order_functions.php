@@ -22,7 +22,6 @@ function confirmReplenishmentOrder($reorder_id) {
     $conn = getDBConnection();
     $reorder_id = (int)$reorder_id;
     
-    // Update status to Confirmed (trigger will handle stock update)
     $query = "UPDATE Replenishment_Order SET status = 'Confirmed' 
               WHERE reorder_id = $reorder_id AND status = 'Pending'";
     
